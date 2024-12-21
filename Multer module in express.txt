@@ -1,0 +1,304 @@
+Multer module in express
+
+
+Multer is a Node.js middleware used for handling multipart/form-data, which is primarily used for uploading files. It is commonly used with Express applications to manage file uploads and provide features like file storage, file filters, and handling different file formats.
+
+Multer simplifies the process of uploading files by automatically parsing the incoming multipart/form-data request, which can contain text fields as well as file data.
+
+Key Features of Multer
+Storage Options: Multer allows you to specify where to store files. There are two types of storage engines:
+
+DiskStorage: Stores the files on the disk. You can specify the destination folder and filename for each uploaded file.
+MemoryStorage: Stores the file in memory as a Buffer object. It is useful when you want to process the file in-memory before saving it to a database or disk.
+File Filter: Multer provides a file filter function to limit the file types that can be uploaded (for example, restricting uploads to image files only).
+
+Limits: You can set limits on file size to prevent large uploads.
+
+Commonly Used Methods in Multer
+multer.diskStorage(options): Used to specify where and how to store the files on the disk (used with storage).
+
+destination: Function to specify the destination folder for file uploads.
+filename: Function to specify how the file should be named.
+multer.memoryStorage(): Creates an instance of memory storage, where files are stored as Buffer objects.
+
+multer({ storage: ... }): Creates the multer middleware with the specified storage options.
+
+upload.single(fieldname): Handles single file uploads. The fieldname is the name of the field in the form.
+
+upload.array(fieldname, maxCount): Handles multiple file uploads. The fieldname is the name of the field in the form, and maxCount is the maximum number of files to upload.
+
+upload.fields(fields): Handles multiple fields with different file upload limits. The fields is an array of objects that specify name and maxCount for each field.
+
+
+
+syntax for multer:
+
+
+const multer = require('multer');
+
+// Set up disk storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Destination folder for the files
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Custom file name
+  }
+});
+
+// Create multer upload middleware with the specified storage engine
+const upload = multer({ storage: storage });
+
+// Usage in a route (e.g., single file upload)
+app.post('/upload', upload.single('file'), (req, res) => {
+  // req.file contains the uploaded file data
+  res.send('File uploaded successfully');
+});
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Project:
+
+
+
+Building the Application: File Upload System with MVC
+Now, let's create a simple File Upload System following the Model-View-Controller (MVC) pattern. We'll use Multer for handling file uploads and downloads, and apply basic CSS to style the app.
+
+Project Structure
+
+file-upload-system/
+│
+├── app.js                (Main entry point)
+├── controllers/           (Handles logic)
+│   └── fileController.js
+├── models/                (Handles file-related operations)
+│   └── fileModel.js
+├── public/                (Static files like CSS)
+│   └── css/
+│       └── style.css
+├── views/                 (Views rendered by Pug)
+│   └── index.pug
+├── uploads/               (Folder where uploaded files will be stored)
+├── node_modules/
+└── package.json
+
+
+
+
+
+
+
+
+
+Step 1: Install Required Modules
+First, initialize the project and install the dependencies:
+
+
+mkdir file-upload-system
+cd file-upload-system
+npm init -y
+npm install express multer pug
+
+
+
+Step 2: Set Up Multer in app.js
+We'll set up the main file (app.js) where the Express server is created, and Multer is used for handling file uploads.
+
+app.js
+
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fileController = require('./controllers/fileController');
+
+const app = express();
+const port = 3000;
+
+// Set Pug as the template engine
+app.set('view engine', 'pug');
+app.set('views', './views');
+
+// Create a storage engine for Multer to store files on disk
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // Files will be stored in 'uploads' directory
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname); // Rename file with timestamp
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// Serve static files (CSS, images, etc.)
+app.use(express.static('public'));
+
+// Route to show the upload form
+app.get('/', fileController.showForm);
+
+// Route to handle file upload
+app.post('/upload', upload.single('file'), fileController.uploadFile);
+
+// Route to handle file download
+app.get('/download/:filename', fileController.downloadFile);
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+Step 3: Create the File Controller (fileController.js)
+The controller will manage the logic for showing the form, uploading files, and downloading files.
+
+controllers/fileController.js
+javascript
+Copy code
+const path = require('path');
+const fs = require('fs');
+
+// Show the upload form
+const showForm = (req, res) => {
+  res.render('index');
+};
+
+// Handle file upload
+const uploadFile = (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+  res.send('File uploaded successfully: ' + req.file.filename);
+};
+
+// Handle file download
+const downloadFile = (req, res) => {
+  const filename = req.params.filename;
+  const filepath = path.join(__dirname, '../uploads', filename);
+
+  if (fs.existsSync(filepath)) {
+    res.download(filepath); // Initiates the file download
+  } else {
+    res.status(404).send('File not found.');
+  }
+};
+
+module.exports = { showForm, uploadFile, downloadFile };
+
+
+
+
+Step 4: Set Up the View (index.pug)
+The view will be a simple HTML form where users can upload a file.
+
+views/index.pug
+
+doctype html
+html
+  head
+    title File Upload System
+    link(rel="stylesheet", href="/css/style.css")
+  body
+    h1 File Upload System
+    form(action="/upload", method="POST", enctype="multipart/form-data")
+      input(type="file", name="file")
+      button(type="submit") Upload File
+    h2 Uploaded Files
+    ul
+      each file in files
+        li
+          a(href=`/download/${file.filename}`) Download #{file.filename}
+
+
+
+
+
+Step 5: Create the CSS File (style.css)
+We'll add a simple CSS file to style the form and page.
+
+public/css/style.css
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin-top: 50px;
+}
+
+h1 {
+  color: #333;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+input[type="file"] {
+  margin-right: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+h2 {
+  margin-top: 30px;
+}
+
+ul {
+  list-style-type: none;
+}
+
+ul li {
+  margin: 10px 0;
+}
+
+a {
+  text-decoration: none;
+  color: #007BFF;
+}
+
+a:hover {
+  color: #0056b3;
+}
+
+
+
+
+Step 6: Start the Server
+Now, create the uploads folder where the files will be stored:
+
+
+mkdir uploads
+Then, start the application:
+
+
+node app.js
+
+Testing the Application
+
+Open your browser and go to http://localhost:3000/.
+Upload a file using the form.
+After uploading, you will see a link to download the uploaded file.
+Conclusion
+In this guide, we:
+
+Explained the Multer module for handling file uploads.
+Created a File Upload System using MVC architecture.
+Used Multer to upload and download files.
+Styled the app with CSS to make it more user-friendly.
+
+
+
+

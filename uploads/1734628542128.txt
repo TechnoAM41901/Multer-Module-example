@@ -1,0 +1,223 @@
+ express
+Purpose: The core module to create an Express.js application.
+Installation: npm install express
+Usage: It is the foundation of any Express app. It provides methods to define routes, handle HTTP requests, and set up middlewares.
+javascript
+Copy code
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+    res.send('Hello, World!');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+});
+2. body-parser
+Purpose: Middleware for parsing incoming request bodies, particularly for handling POST requests.
+Installation: npm install body-parser
+Usage: Commonly used to parse application/json or application/x-www-form-urlencoded data sent in requests.
+javascript
+Copy code
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+
+// Use body-parser middleware to parse JSON and URL-encoded data
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post('/submit', (req, res) => {
+    console.log(req.body);  // Parsed body data
+    res.send('Data received!');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+3. cors
+Purpose: Middleware for enabling Cross-Origin Resource Sharing (CORS).
+Installation: npm install cors
+Usage: Used to allow or restrict resource sharing across different domains, useful in APIs.
+javascript
+Copy code
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+// Enable CORS for all routes
+app.use(cors());
+
+app.get('/data', (req, res) => {
+    res.json({ message: 'This is a CORS-enabled route' });
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+4. morgan
+Purpose: HTTP request logger middleware for Node.js.
+Installation: npm install morgan
+Usage: Logs incoming requests in a specified format (e.g., dev, combined).
+javascript
+Copy code
+const express = require('express');
+const morgan = require('morgan');
+const app = express();
+
+// Use morgan for logging requests
+app.use(morgan('dev'));
+
+app.get('/', (req, res) => {
+    res.send('Hello, World!');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+5. cookie-parser
+Purpose: Middleware to parse cookies sent by the client.
+Installation: npm install cookie-parser
+Usage: Used for reading cookies that are sent with HTTP requests, allowing you to manage session data and authentication.
+javascript
+Copy code
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const app = express();
+
+// Use cookie-parser middleware
+app.use(cookieParser());
+
+app.get('/', (req, res) => {
+    const cookies = req.cookies;
+    res.send(`Cookies: ${JSON.stringify(cookies)}`);
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+6. express-session
+Purpose: Used for managing session data on the server.
+Installation: npm install express-session
+Usage: Helps in persisting user data across requests, typically used in authentication.
+javascript
+Copy code
+const express = require('express');
+const session = require('express-session');
+const app = express();
+
+// Use session middleware
+app.use(session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: true
+}));
+
+app.get('/', (req, res) => {
+    if (req.session.views) {
+        req.session.views++;
+        res.send(`<p>Views: ${req.session.views}</p>`);
+    } else {
+        req.session.views = 1;
+        res.send('<p>Welcome! Refresh to start counting views.</p>');
+    }
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+7. express-validator
+Purpose: Middleware for validating and sanitizing user input.
+Installation: npm install express-validator
+Usage: Ensures that incoming request data is valid (e.g., checking for proper email format).
+javascript
+Copy code
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const app = express();
+
+app.use(express.json());
+
+app.post('/submit', [
+    body('email').isEmail().withMessage('Must be a valid email')
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    res.send('Data is valid');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+8. helmet
+Purpose: Middleware to secure HTTP headers.
+Installation: npm install helmet
+Usage: Adds security-related HTTP headers to protect against web vulnerabilities.
+javascript
+Copy code
+const express = require('express');
+const helmet = require('helmet');
+const app = express();
+
+// Use helmet for security
+app.use(helmet());
+
+app.get('/', (req, res) => {
+    res.send('Secure headers enabled');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+9. passport
+Purpose: Authentication middleware for Node.js.
+Installation: npm install passport
+Usage: Provides a robust solution for user authentication (via sessions, OAuth, etc.).
+javascript
+Copy code
+const express = require('express');
+const passport = require('passport');
+const app = express();
+
+app.use(passport.initialize());
+
+app.get('/login', (req, res) => {
+    res.send('Login page');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+10. multer
+Purpose: Middleware for handling multipart/form-data, which is used for file uploads.
+Installation: npm install multer
+Usage: Handles file uploads in Express applications, typically for image or document uploads.
+javascript
+Copy code
+const express = require('express');
+const multer = require('multer');
+const app = express();
+
+const upload = multer({ dest: 'uploads/' });
+
+app.post('/upload', upload.single('file'), (req, res) => {
+    res.send('File uploaded successfully');
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
+Summary:
+express: Core of any Express app.
+body-parser: Parses request bodies (JSON, URL encoded).
+cors: Enables Cross-Origin Resource Sharing.
+morgan: Logs HTTP requests.
+cookie-parser: Parses cookies.
+express-session: Manages sessions.
+express-validator: Validates request data.
+helmet: Adds HTTP security headers.
+passport: Authentication middleware.
+multer: Handles file uploads.

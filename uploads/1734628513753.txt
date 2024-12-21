@@ -1,0 +1,258 @@
+// bodyparser and cors module example:
+
+
+Project Structure
+
+todo-app/
+│
+├── app.js (Main entry point)
+├── controllers/
+│   └── todoController.js (Controller for the todo logic)
+├── models/
+│   └── todoModel.js (Model for interacting with the JSON data)
+├── public/
+│   └── css/
+│       └── style.css
+├── views/
+│   └── index.pug
+├── todos.json (Data file that stores the to-dos)
+└── node_modules/
+
+
+
+
+Step-by-Step Guide
+
+
+
+1. Setting up the Project
+First, initialize your Node.js project and install the dependencies.
+
+
+mkdir todo-app
+cd todo-app
+npm init -y
+npm install express body-parser cors fs
+
+
+
+2. Create the JSON Data File
+Create a file named todos.json that will simulate the to-do data store.
+
+todos.json
+
+[
+    { "id": 1, "task": "Learn Express", "completed": false },
+    { "id": 2, "task": "Study Node.js", "completed": false },
+    { "id": 3, "task": "Write documentation", "completed": false }
+]
+
+
+
+
+3. Define the Model (Handle Data Operations)
+The model (todoModel.js) will be responsible for reading and writing to the todos.json file.
+
+models/todoModel.js
+
+const fs = require('fs');
+const path = require('path');
+const todosFilePath = path.join(__dirname, '..', 'todos.json');
+
+// Helper function to read the todos data
+const readTodosFromFile = () => {
+    try {
+        const data = fs.readFileSync(todosFilePath, 'utf8');
+        return JSON.parse(data);
+    } catch (err) {
+        console.error('Error reading todos file:', err);
+        return [];
+    }
+};
+
+// Helper function to write the todos data
+const writeTodosToFile = (todos) => {
+    try {
+        fs.writeFileSync(todosFilePath, JSON.stringify(todos, null, 2), 'utf8');
+    } catch (err) {
+        console.error('Error writing to todos file:', err);
+    }
+};
+
+// Model functions to interact with the todos data
+
+// Get all todos
+const getTodos = () => {
+    return readTodosFromFile();
+};
+
+// Add a new todo
+const addTodo = (task) => {
+    const todos = readTodosFromFile();
+    const newTodo = { id: todos.length + 1, task, completed: false };
+    todos.push(newTodo);
+    writeTodosToFile(todos);
+    return newTodo;
+};
+
+// Mark a todo as completed
+const completeTodo = (id) => {
+    const todos = readTodosFromFile();
+    const todo = todos.find(todo => todo.id === id);
+    if (todo) {
+        todo.completed = true;
+        writeTodosToFile(todos);
+        return todo;
+    }
+    return null;
+};
+
+// Delete a todo
+const deleteTodo = (id) => {
+    let todos = readTodosFromFile();
+    todos = todos.filter(todo => todo.id !== id);
+    writeTodosToFile(todos);
+    return todos;
+};
+
+module.exports = { getTodos, addTodo, completeTodo, deleteTodo };
+
+
+
+4. Create the Controller (Handle Logic)
+The controller (todoController.js) will interact with the model to handle the business logic (add, get, update, and delete to-dos).
+
+controllers/todoController.js
+javascript
+Copy code
+const todoModel = require('../models/todoModel');
+
+// Get all to-dos
+const getTodos = (req, res) => {
+    const todos = todoModel.getTodos();
+    res.json(todos);
+};
+
+// Add a new to-do
+const addTodo = (req, res) => {
+    const { task } = req.body;
+    if (!task) {
+        return res.status(400).json({ error: 'Task is required' });
+    }
+    const newTodo = todoModel.addTodo(task);
+    res.status(201).json(newTodo);
+};
+
+// Mark a to-do as completed
+const completeTodo = (req, res) => {
+    const { id } = req.params;
+    const updatedTodo = todoModel.completeTodo(parseInt(id));
+    if (!updatedTodo) {
+        return res.status(404).json({ error: 'Todo not found' });
+    }
+    res.json(updatedTodo);
+};
+
+// Delete a to-do
+const deleteTodo = (req, res) => {
+    const { id } = req.params;
+    const updatedTodos = todoModel.deleteTodo(parseInt(id));
+    res.json(updatedTodos);
+};
+
+module.exports = { getTodos, addTodo, completeTodo, deleteTodo };
+5. Define Routes in app.js
+The main entry point of the application will set up the server, use middleware, and define routes that call the controller methods.
+
+app.js
+javascript
+Copy code
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const todoController = require('./controllers/todoController');
+
+const app = express();
+const port = 3000;
+
+// Middleware
+app.use(cors()); // Enable CORS
+app.use(bodyParser.json()); // Parse JSON bodies
+
+// Routes
+app.get('/todos', todoController.getTodos);
+app.post('/todos', todoController.addTodo);
+app.put('/todos/:id', todoController.completeTodo);
+app.delete('/todos/:id', todoController.deleteTodo);
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
+
+
+
+
+6. Test the Application
+Now, you can start your application with:
+
+node app.js
+Test the API using Postman, cURL, or a browser:
+
+GET /todos – Fetch all to-dos.
+POST /todos – Add a new to-do (send JSON in the request body).
+PUT /todos/:id – Mark a specific to-do as completed.
+DELETE /todos/:id – Delete a specific to-do.
+
+
+
+7. Optional: Front-End View with Pug (Optional)
+If you'd like to add a front-end view, you can use Pug for templating. First, install the pug package:
+
+
+npm install pug
+Then, modify app.js to render a simple view for displaying the to-dos.
+
+Modify app.js for Views
+
+app.set('view engine', 'pug');
+app.set('views', './views');
+
+// Route to render the to-do list
+app.get('/', (req, res) => {
+    const todos = todoModel.getTodos();
+    res.render('index', { todos });
+});
+
+
+
+
+Create views/index.pug
+
+doctype html
+html
+  head
+    title To-Do List
+  body
+    h1 To-Do List
+    ul
+      each todo in todos
+        li
+          span= todo.task
+          if todo.completed
+            span (Completed)
+          else
+            a(href=`/todos/${todo.id}/complete`) Complete
+    form(action='/todos', method='POST')
+      input(type='text', name='task', placeholder='Enter a new task')
+      button(type='submit') Add Task
+
+This would render a simple list of to-dos and allow users to add tasks via a form.
+
+Conclusion:
+With this structure, we’ve achieved:
+
+Model (todoModel.js) for data handling (reading and writing to JSON).
+Controller (todoController.js) for processing business logic.
+Express middleware (body-parser for parsing JSON and cors for enabling cross-origin requests).
+MVC pattern to keep the app modular and maintainable.

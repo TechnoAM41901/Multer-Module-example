@@ -1,0 +1,11 @@
+Hello HR team,
+FORTYBEARS
+
+I am writing to apply for the React Developer position at FORTYBEARS. I hold a BE in Computer Engineering from Savitribai Phule Pune University and have experience as a Software Developer Intern and Full Stack Developer.
+
+My passion lies in front-end development, particularly with React. I have strong skills in JavaScript, HTML, CSS, and React. I am eager to contribute to your team and help create innovative solutions.
+
+Thank you for considering my application. I look forward to discussing how my skills and experiences align with your needs.
+
+Sincerely,
+Amar Mapare
